@@ -439,7 +439,7 @@ final class StoreBackedCommandInterpreter(
               .map(_.flatMap(_.toContractOption.toList))
             contractsByKey <- keys.toSeq
               .parTraverse { case (key, limit) =>
-                contractStore.lookupNonUniqueContractKey(Set.empty, key, None, limit)
+                contractStore.lookupContractKey(Set.empty, key, None, limit)
               }
               .map(_.flatMap(_.contracts))
             contracts = contractsById ++ contractsByKey
@@ -608,7 +608,7 @@ object StoreBackedCommandInterpreter {
           metrics.execution.lookupNContractKey,
           FutureUnlessShutdown.outcomeF(
             contractStore
-              .lookupNonUniqueContractKey(
+              .lookupContractKey(
                 readers = readers,
                 key = key,
                 pageToken = continuationToken.token,
