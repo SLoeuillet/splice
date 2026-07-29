@@ -344,7 +344,7 @@ export const GrantRevokeFeaturedAppForm: React.FC<GrantRevokeFeaturedAppFormProp
                 onChange: ({ value }) => validateUrl(value),
               }}
             >
-              {field => <field.TextField title="URL" id={`${testIdPrefix}-url`} />}
+              {field => <field.TextField title="SUPPORTING URL" id={`${testIdPrefix}-url`} />}
             </form.AppField>
           </>
         )}
