@@ -34,6 +34,8 @@ lazy val `canton-sequencer-driver-api` = BuildCommon.`canton-sequencer-driver-ap
 lazy val `canton-community-reference-driver` = BuildCommon.`canton-community-reference-driver`
 lazy val `canton-observability-metrics-testing` = BuildCommon.`canton-observability-metrics-testing`
 lazy val `canton-traffic-enforcement-component` = BuildCommon.`canton-traffic-enforcement-component`
+lazy val `daml-lf-transaction-test-lib` = BuildCommon.`daml-lf-transaction-test-lib`
+lazy val `daml-lf-data-scalacheck` = BuildCommon.`daml-lf-data-scalacheck`
 
 lazy val `splice-wartremover-extension` = Wartremover.`splice-wartremover-extension`
 
@@ -1165,6 +1167,29 @@ lazy val `splitwell-test-daml` =
       Compile / damlEnableJavaCodegen := false,
     )
 
+lazy val `lf-value-json` =
+  project
+    .in(file("canton-fork/lf-value-json"))
+    .dependsOn(
+      `canton-ledger-json-api`,
+      `daml-lf-transaction-test-lib`,
+    )
+    .settings(
+      scalacOptions += "-Xsource-features:infer-override",
+      libraryDependencies ++= {
+        import CantonDependencies._
+        Seq(
+          CantonDependencies.canton_ledger_api_core,
+          daml_lf_api_type_signature,
+          scalatest % Test,
+          scalacheck % Test,
+          scalaz_scalacheck % Test,
+          scalatestScalacheck % Test,
+        )
+      },
+      CantonDependencies.excludeTranscodeConflictingDependencies,
+    )
+
 lazy val `apps-common` =
   project
     .in(file("apps/common"))
@@ -1172,6 +1197,7 @@ lazy val `apps-common` =
       `canton-community-common`,
       `canton-community-app` % "compile->compile;test->test",
       `canton-community-testing` % "test->test",
+      `lf-value-json`,
       `splice-wartremover-extension` % "compile->compile;test->test",
       // We include all DARs here to make sure they are available as resources.
       `splice-amulet-daml`,
