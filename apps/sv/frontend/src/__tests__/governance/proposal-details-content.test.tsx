@@ -24,6 +24,7 @@ import { ProposalVoteForm } from '../../components/governance/ProposalVoteForm';
 import App from '../../App';
 import { svPartyId } from '../mocks/constants';
 import { Wrapper } from '../helpers';
+import { SUPPORTING_URL_LABEL, VOTE_PROPOSAL_CONTRACT_ID_LABEL } from '../../utils/constants';
 
 const voteRequest = {
   contractId: 'abc123' as ContractId<VoteRequest>,
@@ -165,6 +166,10 @@ describe('Proposal Details Content', () => {
     const action = screen.getByTestId('proposal-details-action-value');
     expect(action.textContent).toMatch(/Offboard Member/);
 
+    expect(screen.getByTestId('proposal-details-contractid-label').textContent).toBe(
+      VOTE_PROPOSAL_CONTRACT_ID_LABEL
+    );
+
     const offboardSection = screen.getByTestId('proposal-details-offboard-member-section');
     expect(offboardSection).toBeInTheDocument();
 
@@ -176,6 +181,8 @@ describe('Proposal Details Content', () => {
 
     const summary = screen.getByTestId('proposal-details-summary-value');
     expect(summary.textContent).toMatch(/Summary of the proposal/);
+
+    expect(screen.getByTestId('proposal-details-url-label').textContent).toBe(SUPPORTING_URL_LABEL);
 
     const url = screen.getByTestId('proposal-details-url');
     expect(url.textContent).toMatch(/https:\/\/example.com/);
