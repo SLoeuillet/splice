@@ -518,6 +518,91 @@ describe('Proposal Details Content', () => {
     expect(jsonDiffsToggle).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByText('JSON')).not.toBeInTheDocument();
     expect(screen.getByTestId('json-diffs-details')).not.toBeVisible();
+
+    expect(
+      screen.queryByTestId('proposal-details-disabled-fields-warning')
+    ).not.toBeInTheDocument();
+  });
+
+  test('should warn when disabled fields were altered in an amulet rules config proposal', () => {
+    const amuletRulesConfigDetails = {
+      actionName: 'Set Amulet Rules Config',
+      action: 'CRARC_SetConfig',
+      proposal: {
+        configChanges: [
+          {
+            fieldName: 'transferConfigCreateFee',
+            label: 'Transfer (Create Fee)',
+            currentValue: '0.03',
+            newValue: '0.04',
+          },
+          {
+            fieldName: 'decentralizedSynchronizerActiveSynchronizer',
+            label: 'The currently active synchronizer',
+            currentValue: 'global-domain::12',
+            newValue: 'global-domain::13',
+            isId: true,
+            disabled: true,
+          },
+        ],
+      },
+    } as ProposalDetails;
+
+    render(
+      <Wrapper>
+        <ProposalDetailsContent
+          currentSvPartyId={voteRequest.votingInformation.requester}
+          contractId={voteRequest.contractId}
+          proposalDetails={amuletRulesConfigDetails}
+          votingInformation={voteRequest.votingInformation}
+          votes={voteRequest.votes}
+        />
+      </Wrapper>
+    );
+
+    const warning = screen.getByTestId('proposal-details-disabled-fields-warning');
+    expect(warning).toBeInTheDocument();
+    expect(warning.textContent).toMatch(/Disabled fields have been altered in this vote proposal/);
+
+    const changes = screen.getAllByTestId('config-change');
+    expect(changes[1]).toHaveAttribute('data-disabled', 'true');
+    expect(within(changes[1]).getByTestId('config-change-disabled-label')).toHaveTextContent(
+      'Disabled field'
+    );
+  });
+
+  test('should warn when disabled fields were altered in a dso rules config proposal', () => {
+    const dsoRulesConfigDetails = {
+      actionName: 'Set DSO Rules Configuration',
+      action: 'SRARC_SetConfig',
+      proposal: {
+        configChanges: [
+          {
+            fieldName: 'decentralizedSynchronizerActiveSynchronizerId',
+            label: 'Decentralized synchronizer: Active synchronizer identifier',
+            currentValue: 'global-domain::12',
+            newValue: 'global-domain::13',
+            isId: true,
+            disabled: true,
+          },
+        ],
+      },
+    } as ProposalDetails;
+
+    render(
+      <Wrapper>
+        <ProposalDetailsContent
+          currentSvPartyId={voteRequest.votingInformation.requester}
+          contractId={voteRequest.contractId}
+          proposalDetails={dsoRulesConfigDetails}
+          votingInformation={voteRequest.votingInformation}
+          votes={voteRequest.votes}
+        />
+      </Wrapper>
+    );
+
+    expect(screen.getByTestId('proposal-details-disabled-fields-warning')).toBeInTheDocument();
+    expect(screen.getByTestId('config-change-disabled-label')).toHaveTextContent('Disabled field');
   });
 
   test('should render dso rules config changes', () => {
