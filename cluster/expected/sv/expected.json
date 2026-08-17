@@ -1636,6 +1636,10 @@
           "name": "listBulkAcsSnapshotObjects",
           "type": "unlimited"
         },
+        "/api/scan/v0/history/bulk/checksums": {
+          "name": "getBulkHistoryChecksums",
+          "type": "unlimited"
+        },
         "/api/scan/v0/history/bulk/updates": {
           "name": "listBulkUpdateHistoryObjects",
           "type": "unlimited"
@@ -2023,6 +2027,10 @@
         },
         "/api/scan/v0/history/bulk/acs": {
           "name": "listBulkAcsSnapshotObjects",
+          "type": "unlimited"
+        },
+        "/api/scan/v0/history/bulk/checksums": {
+          "name": "getBulkHistoryChecksums",
           "type": "unlimited"
         },
         "/api/scan/v0/history/bulk/updates": {
