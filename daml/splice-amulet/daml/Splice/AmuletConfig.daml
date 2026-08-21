@@ -112,10 +112,17 @@ data AmuletConfig unit = AmuletConfig with
     rewardConfig : Optional RewardConfig
       -- ^ Configuration for the reward accounting and calculation. If None, then on-ledger reward tracking is used.
     transferPreapprovalBaseDuration : Optional RelTime -- ^ Base duration of a transfer pre-approval granted for free on creation and renewal. Default: 90 days.
+    developmentFundManagerBlacklist : Optional [Party]
+      -- ^ List of blocked parties. They cannot allocate new coupons, and the coupons they allocated cannot be minted either.
+    minDevelopmentFundMintingDelay : Optional RelTime
+      -- ^ Minimum delay between allocation and minting. Default: 0 days.
   deriving (Eq, Show, Serializable)
 
 getExternalPartyConfigStateTickDuration : AmuletConfig a -> RelTime
 getExternalPartyConfigStateTickDuration config = fromOptional (hours 24) config.externalPartyConfigStateTickDuration
+
+getDevelopmentFundManagerBlacklist : AmuletConfig unit -> [Party]
+getDevelopmentFundManagerBlacklist config = fromOptional [] config.developmentFundManagerBlacklist
 
 -- | $1/year specified as a daily rate
 defaultTransferPreapprovalFee : Decimal
@@ -141,6 +148,7 @@ validAmuletConfig AmuletConfig
     , transferPreapprovalFee
     , featuredAppActivityMarkerAmount
     , rewardConfig
+    , minDevelopmentFundMintingDelay
     }
   =
     validTransferConfig transferConfig &&
@@ -151,7 +159,8 @@ validAmuletConfig AmuletConfig
     optional True (>= 0.0) transferPreapprovalFee &&
     optional True (>= 0.0) featuredAppActivityMarkerAmount &&
     featuredAppActivityMarkerAmount == Some transferConfig.extraFeaturedAppRewardAmount &&
-    optional True validRewardConfig rewardConfig
+    optional True validRewardConfig rewardConfig &&
+    optional True (>= days 0) minDevelopmentFundMintingDelay
 
 validTransferConfig : TransferConfig unit -> Bool
 validTransferConfig TransferConfig
@@ -219,9 +228,12 @@ instance Patchable (AmuletConfig USD) where
     transferPreapprovalFee = patch new.transferPreapprovalFee base.transferPreapprovalFee current.transferPreapprovalFee
     featuredAppActivityMarkerAmount = patch new.featuredAppActivityMarkerAmount base.featuredAppActivityMarkerAmount current.featuredAppActivityMarkerAmount
     optDevelopmentFundManager = patch new.optDevelopmentFundManager base.optDevelopmentFundManager current.optDevelopmentFundManager
+    developmentFundManagerBlacklist =
+      patchScalar new.developmentFundManagerBlacklist base.developmentFundManagerBlacklist current.developmentFundManagerBlacklist
     externalPartyConfigStateTickDuration = patch new.externalPartyConfigStateTickDuration base.externalPartyConfigStateTickDuration current.externalPartyConfigStateTickDuration
     rewardConfig = patch new.rewardConfig base.rewardConfig current.rewardConfig
     transferPreapprovalBaseDuration = patch new.transferPreapprovalBaseDuration base.transferPreapprovalBaseDuration current.transferPreapprovalBaseDuration
+    minDevelopmentFundMintingDelay = patch new.minDevelopmentFundMintingDelay base.minDevelopmentFundMintingDelay current.minDevelopmentFundMintingDelay
 
 instance Patchable RewardConfig where
   patch new base current = RewardConfig with
