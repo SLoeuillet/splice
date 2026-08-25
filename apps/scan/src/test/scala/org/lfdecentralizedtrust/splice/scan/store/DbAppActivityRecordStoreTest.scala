@@ -7,6 +7,7 @@ import com.digitalasset.canton.topology.SynchronizerId
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.resource.DbStorage
 import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
+import org.lfdecentralizedtrust.splice.scan.store.AppActivityStore.RoundIngestionStatus
 import org.lfdecentralizedtrust.splice.scan.store.db.DbAppActivityRecordStore
 import org.lfdecentralizedtrust.splice.scan.store.db.DbAppActivityRecordStore.*
 import org.lfdecentralizedtrust.splice.scan.store.db.DbScanVerdictStore
@@ -657,6 +658,51 @@ class DbAppActivityRecordStoreTest
     }
   }
 
+  "ingestionStatusForRound" should {
+
+    "return CannotProvide when meta row absent and isFirstSv=false" in {
+      for {
+        (store, _) <- newStore(isFirstSv = false)
+        result <- store.ingestionStatusForRound(5L)
+      } yield {
+        result shouldBe RoundIngestionStatus.CannotProvide
+      }
+    }
+
+    "return Undetermined when meta row absent and isFirstSv=true" in {
+      for {
+        (store, _) <- newStore(isFirstSv = true)
+        result <- store.ingestionStatusForRound(5L)
+      } yield {
+        result shouldBe RoundIngestionStatus.Undetermined
+      }
+    }
+
+    "return CannotProvide when meta row present and roundNumber <= earliestIngested" in {
+      for {
+        (store, _) <- newStore()
+        baseTs = CantonTimestamp.now()
+        _ <- store.insertActivityRecordMetaForTesting(1, 0, baseTs.toMicros, 10L, Some(11L))
+        atBoundary <- store.ingestionStatusForRound(10L)
+        below <- store.ingestionStatusForRound(5L)
+      } yield {
+        atBoundary shouldBe RoundIngestionStatus.CannotProvide
+        below shouldBe RoundIngestionStatus.CannotProvide
+      }
+    }
+
+    "return Undetermined when meta row present and roundNumber > earliestIngested" in {
+      for {
+        (store, _) <- newStore()
+        baseTs = CantonTimestamp.now()
+        _ <- store.insertActivityRecordMetaForTesting(1, 0, baseTs.toMicros, 10L, Some(11L))
+        result <- store.ingestionStatusForRound(15L)
+      } yield {
+        result shouldBe RoundIngestionStatus.Undetermined
+      }
+    }
+  }
+
   "lookupActivityRecordMeta" should {
 
     "return None when no meta row exists" in {
@@ -1090,7 +1136,7 @@ class DbAppActivityRecordStoreTest
     val n = storeCounter.getAndIncrement()
     val participantId = mkParticipantId(s"activity-test-$n")
     val updateHistory = new UpdateHistory(
-      storage.underlying,
+      storage,
       migrationId,
       s"app_activity_test_$n",
       participantId,
@@ -1103,7 +1149,7 @@ class DbAppActivityRecordStoreTest
     )
     updateHistory.ingestionSink.initialize().map { _ =>
       val store = new DbAppActivityRecordStore(
-        storage.underlying,
+        storage,
         updateHistory,
         versions,
         isFirstSv,
@@ -1121,7 +1167,7 @@ class DbAppActivityRecordStoreTest
   ): Future[(DbAppActivityRecordStore, DbScanVerdictStore)] = {
     val participantId = mkParticipantId("activity-test")
     val updateHistory = new UpdateHistory(
-      storage.underlying,
+      storage,
       migrationId,
       "app_activity_combined_test",
       participantId,
@@ -1143,7 +1189,7 @@ class DbAppActivityRecordStoreTest
       val verdictStore = new DbScanVerdictStore(
         storage.underlying,
         updateHistory,
-        Some(appStore),
+        appStore,
         loggerFactory,
       )
       (appStore, verdictStore)
