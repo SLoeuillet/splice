@@ -16,7 +16,6 @@ import org.lfdecentralizedtrust.splice.codegen.java.splice.amuletrules.{
   AmuletRules,
   TransferPreapproval,
 }
-import org.lfdecentralizedtrust.splice.codegen.java.splice.dsorules.DsoRules
 import org.lfdecentralizedtrust.splice.codegen.java.splice.externalpartyamuletrules.{
   ExternalPartyAmuletRules,
   TransferCommandCounter,
@@ -38,7 +37,6 @@ import org.lfdecentralizedtrust.splice.http.HttpClient
 import org.lfdecentralizedtrust.splice.http.v0.definitions.{
   AnsEntry,
   GetBulkObjectChecksumsResponse,
-  GetDsoInfoResponse,
   GetRewardAccountingActivityTotalsResponse,
   GetRewardAccountingBatchResponse,
   GetRewardAccountingRootHashResponse,
@@ -70,6 +68,7 @@ import org.lfdecentralizedtrust.splice.util.{
   ChoiceContextWithDisclosures,
   Contract,
   ContractWithState,
+  DsoInfo,
   FactoryChoiceWithDisclosures,
   TemplateJsonDecoder,
 }
@@ -106,6 +105,7 @@ import org.lfdecentralizedtrust.splice.codegen.java.splice.api.token.allocationi
 import org.lfdecentralizedtrust.splice.codegen.java.splice.api.token.transferinstructionv1
 import org.lfdecentralizedtrust.splice.codegen.java.splice.api.token.transferinstructionv2
 import org.lfdecentralizedtrust.splice.codegen.java.splice.dsorules.{
+  DsoRules,
   DsoRules_CloseVoteRequestResult,
   VoteRequest,
 }
@@ -195,10 +195,19 @@ class BftScanConnection(
   override def getDsoInfo()(implicit
       ec: ExecutionContext,
       tc: TraceContext,
-  ): Future[GetDsoInfoResponse] =
+  ): Future[DsoInfo] =
     bftCall(
       _.getDsoInfo(),
       "getDsoInfo",
+    )
+
+  override def getDsoRules(
+  )(implicit
+      tc: TraceContext
+  ): Future[Contract[DsoRules.ContractId, DsoRules]] =
+    bftCall(
+      _.getDsoInfo().map(_.dsoRules.contract),
+      "getDsoRules",
     )
 
   override def getHoldingsSummaryAt(
@@ -233,12 +242,6 @@ class BftScanConnection(
       _.getAmuletRulesWithState(cachedAmuletRules),
       "getAmuletRulesWithState",
     )
-
-  override def getDsoRules(
-  )(implicit
-      tc: TraceContext
-  ): Future[Contract[DsoRules.ContractId, DsoRules]] =
-    bftCall(_.getDsoRules(), "getDsoRules")
 
   override protected def runGetExternalPartyAmuletRules(
       cachedExternalPartyAmuletRules: Option[

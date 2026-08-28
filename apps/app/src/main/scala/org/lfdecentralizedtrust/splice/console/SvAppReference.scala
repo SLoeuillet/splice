@@ -42,7 +42,7 @@ import org.lfdecentralizedtrust.splice.sv.config.{
 }
 import org.lfdecentralizedtrust.splice.sv.migration.SynchronizerNodeIdentities
 import org.lfdecentralizedtrust.splice.sv.util.ValidatorOnboarding
-import org.lfdecentralizedtrust.splice.util.Contract
+import org.lfdecentralizedtrust.splice.util.{Contract, DsoInfo}
 
 import java.time.Instant
 import scala.concurrent.duration.FiniteDuration
@@ -89,9 +89,9 @@ abstract class SvAppReference(
       httpCommand(HttpSvPublicAppClient.DevNetOnboardValidatorPrepare())
     }
 
-  def getDsoInfo(): HttpSvPublicAppClient.DsoInfo =
+  def getDsoInfo(): DsoInfo =
     consoleEnvironment.run {
-      httpCommand(HttpSvPublicAppClient.GetDsoInfo)
+      httpCommand(HttpSvOperatorAppClient.GetDsoInfo)
     }
 
   @Help.Summary("Get the CometBFT node status")
