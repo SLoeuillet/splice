@@ -1,23 +1,17 @@
 // Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
-import { expect, jest, test } from '@jest/globals';
+import { expect, test } from '@jest/globals';
 
 import {
+  buildGlobalPerIpRateLimitAction,
+  buildGlobalPerIpRateLimitDescriptor,
   buildRateLimitActions,
   buildRateLimitDescriptors,
   parseFillIntervalMs,
+  validateEffectiveRateLimits,
   validateIpLimits,
   validateTokenBuckets,
 } from './envoyRateLimiter';
-
-jest.mock('@canton-network/splice-pulumi-common/src/config/envConfig', () => ({
-  __esModule: true,
-  spliceEnvConfig: {
-    requireEnv() {
-      return 'dummy';
-    },
-  },
-}));
 
 const baseLimits = {
   maxTokens: 720,
@@ -211,6 +205,76 @@ test('buildRateLimitActions emits per-endpoint and per-IP actions', () => {
       },
     ],
   });
+});
+
+test('buildGlobalPerIpRateLimitAction keys only on the non-spoofable client address', () => {
+  expect(buildGlobalPerIpRateLimitAction()).toEqual({
+    actions: [
+      {
+        masked_remote_address: {
+          v4_prefix_mask_len: 32,
+          v6_prefix_mask_len: 128,
+        },
+      },
+    ],
+  });
+});
+
+test('buildGlobalPerIpRateLimitDescriptor emits a wildcard per-IP bucket', () => {
+  expect(
+    buildGlobalPerIpRateLimitDescriptor({
+      maxTokens: 1000,
+      tokensPerFill: 1000,
+      fillInterval: '60s',
+    })
+  ).toEqual({
+    entries: [{ key: 'masked_remote_address' }],
+    token_bucket: {
+      max_tokens: 1000,
+      tokens_per_fill: 1000,
+      fill_interval: '60s',
+    },
+  });
+});
+
+const envoyFilterArgs = {
+  namespace: 'sv-1',
+  appLabel: 'scan-app',
+  inboundPort: 5012,
+  globalLimits: { maxTokens: 10000, tokensPerFill: 10000, fillInterval: '60s' },
+  globalPerIpLimits: { maxTokens: 1000, tokensPerFill: 1000, fillInterval: '60s' },
+  rateLimits: {
+    '/api/scan/v0/acs': {
+      name: 'acs',
+      type: 'limited' as const,
+      ...baseLimits,
+      perIpLimits,
+    },
+  },
+};
+
+test('validateEffectiveRateLimits validates the global per-IP limits', () => {
+  expect(() =>
+    validateEffectiveRateLimits({
+      ...envoyFilterArgs,
+      globalPerIpLimits: { maxTokens: 1000, tokensPerFill: 1000, fillInterval: '90s' },
+    })
+  ).toThrow('globalPerIpLimits: fillInterval');
+});
+
+test('validateEffectiveRateLimits rejects reserved descriptor names', () => {
+  expect(() =>
+    validateEffectiveRateLimits({
+      ...envoyFilterArgs,
+      rateLimits: {
+        '/api/scan/v0/acs': {
+          name: 'masked_remote_address',
+          type: 'limited' as const,
+          ...baseLimits,
+        },
+      },
+    })
+  ).toThrow('use reserved name');
 });
 
 test('validateIpLimits throws on duplicate IP between two named overrides', () => {

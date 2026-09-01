@@ -30,6 +30,29 @@ test('RateLimitSchema accepts config without overrides', () => {
   expect(() => RateLimitSchema.parse(validConfig)).not.toThrow();
 });
 
+test('RateLimitSchema defaults to global and global per-IP limits', () => {
+  const parsed = RateLimitSchema.parse({});
+  expect(parsed).toEqual({
+    globalLimits: { maxTokens: 10000, tokensPerFill: 10000, fillInterval: '60s' },
+    globalPerIpLimits: { maxTokens: 1000, tokensPerFill: 1000, fillInterval: '60s' },
+  });
+});
+
+test('RateLimitSchema keeps per-endpoint limits optional', () => {
+  const parsed = RateLimitSchema.parse(validConfig);
+  expect(parsed.rateLimits).toBeDefined();
+});
+
+test('RateLimitSchema rejects an unknown endpoint type', () => {
+  const config = {
+    ...validConfig,
+    rateLimits: {
+      '/api/scan/livez': { name: 'livez', type: 'whatever' },
+    },
+  };
+  expect(() => RateLimitSchema.parse(config)).toThrow();
+});
+
 test('RateLimitSchema accepts named overrides with ips', () => {
   const config = {
     ...validConfig,
