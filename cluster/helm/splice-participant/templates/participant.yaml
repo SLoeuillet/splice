@@ -55,6 +55,10 @@ spec:
           value: {{ .Values.persistence.port | quote }}
         - name: CANTON_PARTICIPANT_POSTGRES_SCHEMA
           value: {{ .Values.persistence.schema }}
+        {{- with .Values.persistence.user }}
+        - name: CANTON_PARTICIPANT_POSTGRES_USER
+          value: {{ . | quote }}
+        {{- end }}
         - name: CANTON_PARTICIPANT_POSTGRES_PASSWORD
           {{- if ((.Values.persistence).secretOverrides).postgresPassword }}
           value: {{ .Values.persistence.secretOverrides.postgresPassword | quote }}

@@ -48,6 +48,10 @@ spec:
           value: {{ .Values.defaultJvmOptions }} {{ .Values.additionalJvmOptions }}
         - name: CANTON_DOMAIN_POSTGRES_SERVER
           value: {{ .Values.sequencer.persistence.host }}
+        {{- with .Values.sequencer.persistence.user }}
+        - name: CANTON_DOMAIN_POSTGRES_USER
+          value: {{ . | quote }}
+        {{- end }}
         - name: CANTON_DOMAIN_POSTGRES_PASSWORD
           {{- if ((.Values.sequencer.persistence).secretOverrides).postgresPassword }}
           value: {{ .Values.sequencer.persistence.secretOverrides.postgresPassword | quote }}

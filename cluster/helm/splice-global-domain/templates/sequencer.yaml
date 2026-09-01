@@ -58,6 +58,10 @@ spec:
               value: {{ .Values.sequencer.persistence.host }}
             - name: CANTON_DOMAIN_POSTGRES_PORT
               value: {{ .Values.sequencer.persistence.port | quote }}
+            {{- with .Values.sequencer.persistence.user }}
+            - name: CANTON_DOMAIN_POSTGRES_USER
+              value: {{ . | quote }}
+            {{- end }}
             - name: CANTON_DOMAIN_POSTGRES_PASSWORD
               {{- if ((.Values.sequencer.persistence).secretOverrides).postgresPassword }}
               value: {{ .Values.sequencer.persistence.secretOverrides.postgresPassword | quote }}

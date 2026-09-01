@@ -62,6 +62,10 @@ spec:
           value: {{ .Values.mediator.persistence.host }}
         - name: CANTON_DOMAIN_POSTGRES_PORT
           value: {{ .Values.mediator.persistence.port | quote }}
+        {{- with .Values.mediator.persistence.user }}
+        - name: CANTON_DOMAIN_POSTGRES_USER
+          value: {{ . | quote }}
+        {{- end }}
         - name: CANTON_DOMAIN_POSTGRES_PASSWORD
           {{- if ((.Values.mediator.persistence).secretOverrides).postgresPassword }}
           value: {{ .Values.mediator.persistence.secretOverrides.postgresPassword | quote }}
