@@ -82,6 +82,7 @@ export function getAmuletRulesConfig(
   baseRateTrafficLimitsBurstWindow: string = '1200000000'
 ): AmuletConfig<USD> {
   return {
+    amuletSwitchOverTimes: null,
     packageConfig: {
       amuletNameService: '0.1.8',
       walletPayments: '0.1.8',
@@ -460,7 +461,10 @@ export function getExpectedAmuletRulesConfigDiffsHTML(
       class="jsondiffpatch-unchanged"
       data-key="minDevelopmentFundMintingDelay"><div
         class="jsondiffpatch-property-name">minDevelopmentFundMintingDelay</div><div
-      class="jsondiffpatch-value"><pre>null</pre></div></li></ul></div>
+        class="jsondiffpatch-value"><pre>null</pre></div></li><li
+      class="jsondiffpatch-unchanged" data-key="amuletSwitchOverTimes"><div
+        class="jsondiffpatch-property-name">amuletSwitchOverTimes</div><div
+        class="jsondiffpatch-value"><pre>null</pre></div></li></ul></div>
   `;
   return mock;
 }
