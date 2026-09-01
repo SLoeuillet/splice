@@ -1814,6 +1814,8 @@ class HttpWalletHandler(
               expiresAt.toInstant,
               body.reason,
               developmentFundManager.toProtoPrimitive,
+              // TODO(#6722): expose `mintAfter` in the wallet API
+              java.util.Optional.empty(),
             )
           )
         result <- userWallet.connection
