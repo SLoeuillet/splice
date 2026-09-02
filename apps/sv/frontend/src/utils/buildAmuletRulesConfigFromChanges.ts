@@ -93,6 +93,16 @@ export function buildAmuletRulesConfigFromChanges(
     true
   );
   const transferConfigTokenStandardMaxTTL = getValue('transferConfigTokenStandardMaxTTL', true);
+  const developmentFundManagerBlacklistParties =
+    getValue('developmentFundManagerBlacklist', true)
+      ?.split(',')
+      .map(party => party.trim())
+      .filter(party => party !== '') ?? [];
+  const developmentFundManagerBlacklist =
+    developmentFundManagerBlacklistParties.length > 0
+      ? developmentFundManagerBlacklistParties
+      : null;
+  const minDevelopmentFundMintingDelay = getValue('minDevelopmentFundMintingDelay', true);
   const rewardConfigMintingVersion = getValue('rewardConfigMintingVersion', true);
   const amuletConfig: AmuletConfig<'USD'> = {
     tickDuration: { microseconds: getValue('tickDuration', false) },
@@ -104,8 +114,11 @@ export function buildAmuletRulesConfigFromChanges(
         ? null
         : { microseconds: externalPartyConfigStateTickDuration },
     transferPreapprovalBaseDuration: null,
-    developmentFundManagerBlacklist: null,
-    minDevelopmentFundMintingDelay: null,
+    developmentFundManagerBlacklist,
+    minDevelopmentFundMintingDelay:
+      minDevelopmentFundMintingDelay === null
+        ? null
+        : { microseconds: minDevelopmentFundMintingDelay },
     amuletSwitchOverTimes: null,
     transferConfig: {
       createFee: { fee: getValue('transferConfigCreateFee', false) },
